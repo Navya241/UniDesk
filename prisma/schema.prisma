@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String            @id @default(uuid())
+  name           String
+  email          String            @unique
+  passwordHash   String
+  role           String            // "STUDENT" | "FACULTY" | "DEPARTMENT_STAFF" | "ADMIN"
+  departmentId   String?
+  department     Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  avatarUrl      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  // Relationships
+  reportedTickets Ticket[]         @relation("ReportedBy")
+  assignedTickets Ticket[]         @relation("AssignedTo")
+  comments        TicketComment[]
+  attachments     TicketAttachment[]
+  historyActions  TicketHistory[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+
+  @@index([role])
+  @@index([departmentId])
+  @@index([email])
+}
+
+model Department {
+  id              String         @id @default(uuid())
+  name            String         @unique
+  code            String         @unique
+  description     String?
+  defaultCategory String?        // "HOSTEL" | "ACADEMICS" | "IT" | "LIBRARY" | "ADMINISTRATION" | "OTHER"
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relationships
+  staffMembers    User[]
+  tickets         Ticket[]
+
+  @@index([code])
+}
+
+model Ticket {
+  id              String            @id @default(uuid())
+  ticketNumber    String            @unique
+  title           String
+  description     String
+  category        String            // "HOSTEL" | "ACADEMICS" | "IT" | "LIBRARY" | "ADMINISTRATION" | "OTHER"
+  priority        String            // "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  status          String            @default("SUBMITTED") // "SUBMITTED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"
+  isAnonymous     Boolean           @default(false)
+
+  reporterId      String
+  reporter        User              @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  departmentId    String
+  department      Department        @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  assignedToId    String?
+  assignedTo      User?             @relation("AssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  dueAt           DateTime
+  escalationState String            @default("NONE") // "NONE" | "WARNING" | "ESCALATED"
+
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relationships
+  comments        TicketComment[]
+  attachments     TicketAttachment[]
+  history         TicketHistory[]
+  notifications   Notification[]
+
+  @@index([reporterId])
+  @@index([departmentId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([dueAt, escalationState])
+  @@index([createdAt])
+}
+
+model TicketComment {
+  id          String             @id @default(uuid())
+  ticketId    String
+  ticket      Ticket             @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  message     String
+  isInternal  Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  attachments TicketAttachment[]
+
+  @@index([ticketId])
+  @@index([authorId])
+}
+
+model TicketAttachment {
+  id           String         @id @default(uuid())
+  ticketId     String
+  ticket       Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  commentId    String?
+  comment      TicketComment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  fileType     String
+  uploadedById String
+  uploadedBy   User           @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+
+  @@index([ticketId])
+  @@index([commentId])
+}
+
+model TicketHistory {
+  id           String   @id @default(uuid())
+  ticketId     String
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId      String?
+  actor        User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action       String   // "CREATED" | "STATUS_CHANGED" | "ASSIGNED" | "REASSIGNED" | "ESCALATED" | "REOPENED" | "COMMENT_ADDED"
+  fieldChanged String?
+  oldValue     String?
+  newValue     String?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketId  String?
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // "TICKET_CREATED" | "TICKET_ASSIGNED" | "TICKET_REASSIGNED" | "STATUS_CHANGED" | "NEW_COMMENT" | "TICKET_RESOLVED" | "TICKET_CLOSED" | "TICKET_REOPENED" | "ESCALATED"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model FAQ {
+  id          String   @id @default(uuid())
+  question    String
+  answer      String
+  category    String   // "HOSTEL" | "ACADEMICS" | "IT" | "LIBRARY" | "ADMINISTRATION" | "OTHER"
+  isPublished Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category, isPublished])
+}
+
+model EscalationConfig {
+  id          String   @id @default(uuid())
+  category    String   @unique // "HOSTEL" | "ACADEMICS" | "IT" | "LIBRARY" | "ADMINISTRATION" | "OTHER"
+  lowHours    Int      @default(72)
+  mediumHours Int      @default(48)
+  highHours   Int      @default(24)
+  urgentHours Int      @default(12)
+  notifyAdmin Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  resource   String
+  resourceId String?
+  metadata   String?  // JSON string
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([resource])
+  @@index([createdAt])
+}
