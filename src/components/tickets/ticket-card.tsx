@@ -81,6 +81,15 @@ export function TicketCard({ ticket, currentUser, onClaim }: TicketCardProps) {
             <span>{ticket.department.name}</span>
           </div>
 
+          {/* Location if present */}
+          {ticket.location && (
+            <div className="flex items-center gap-1.5 text-foreground font-medium">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/80 text-muted-foreground">
+                📍 {ticket.location}
+              </span>
+            </div>
+          )}
+
           {/* SLA Due */}
           <div className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />

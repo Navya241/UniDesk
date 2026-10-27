@@ -108,9 +108,6 @@ export function Sidebar({ user, isOpenMobile, onCloseMobile }: SidebarProps) {
               <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-primary bg-clip-text text-transparent">
                 UniDesk
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                PRO
-              </span>
             </div>
             <p className="text-[11px] text-muted-foreground font-medium">University Helpdesk</p>
           </div>
@@ -119,9 +116,16 @@ export function Sidebar({ user, isOpenMobile, onCloseMobile }: SidebarProps) {
         {/* Navigation Links */}
         <nav className="space-y-1">
           {filteredNav.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            let isActive = false;
+            if (item.href === "/dashboard") {
+              isActive = pathname === "/dashboard";
+            } else if (item.href === "/tickets/new") {
+              isActive = pathname === "/tickets/new";
+            } else if (item.href === "/tickets") {
+              isActive = pathname === "/tickets" || (pathname.startsWith("/tickets/") && pathname !== "/tickets/new");
+            } else {
+              isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            }
             const Icon = item.icon;
 
             return (

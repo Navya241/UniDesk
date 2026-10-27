@@ -183,24 +183,32 @@ export function AdminDashboard({ user, analytics, recentTickets }: AdminDashboar
             </p>
           </div>
 
-          <div className="h-64 w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.ticketsByDepartment} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                <XAxis dataKey="code" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.9)",
-                    borderRadius: "12px",
-                    border: "1px solid #334155",
-                    color: "#fff",
-                    fontSize: "12px",
-                  }}
-                />
-                <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Tickets" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-64 w-full mt-4 flex items-center justify-center">
+            {analytics.ticketsByDepartment.length === 0 || analytics.totalTickets === 0 ? (
+              <div className="text-center text-xs text-muted-foreground py-8">
+                <Building2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="font-semibold text-foreground">No Department Data</p>
+                <p className="text-[11px] mt-1">Submitted tickets will populate department workloads here.</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.ticketsByDepartment} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                  <XAxis dataKey="code" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "rgba(15, 23, 42, 0.95)",
+                      borderRadius: "12px",
+                      border: "1px solid #334155",
+                      color: "#fff",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Tickets" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -216,35 +224,43 @@ export function AdminDashboard({ user, analytics, recentTickets }: AdminDashboar
             </p>
           </div>
 
-          <div className="h-64 w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics.ticketTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.9)",
-                    borderRadius: "12px",
-                    border: "1px solid #334155",
-                    color: "#fff",
-                    fontSize: "12px",
-                  }}
-                />
-                <Area type="monotone" dataKey="created" stroke="#3b82f6" fillOpacity={1} fill="url(#colorCreated)" name="Created" />
-                <Area type="monotone" dataKey="resolved" stroke="#10b981" fillOpacity={1} fill="url(#colorResolved)" name="Resolved" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-64 w-full mt-4 flex items-center justify-center">
+            {analytics.totalTickets === 0 ? (
+              <div className="text-center text-xs text-muted-foreground py-8">
+                <TrendingUp className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="font-semibold text-foreground">No Trend Data</p>
+                <p className="text-[11px] mt-1">Inflow and resolution velocity will appear over time.</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analytics.ticketTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "rgba(15, 23, 42, 0.95)",
+                      borderRadius: "12px",
+                      border: "1px solid #334155",
+                      color: "#fff",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Area type="monotone" dataKey="created" stroke="#3b82f6" fillOpacity={1} fill="url(#colorCreated)" name="Created" />
+                  <Area type="monotone" dataKey="resolved" stroke="#10b981" fillOpacity={1} fill="url(#colorResolved)" name="Resolved" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

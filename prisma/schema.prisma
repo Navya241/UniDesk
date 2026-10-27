@@ -54,6 +54,7 @@ model Ticket {
   ticketNumber    String            @unique
   title           String
   description     String
+  location        String?           // "Hostel 4 - Room 204", "Academic Block B - Lab 3", etc.
   category        String            // "HOSTEL" | "ACADEMICS" | "IT" | "LIBRARY" | "ADMINISTRATION" | "OTHER"
   priority        String            // "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   status          String            @default("SUBMITTED") // "SUBMITTED" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"

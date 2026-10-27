@@ -45,6 +45,7 @@ export interface TicketSummary {
   ticketNumber: string;
   title: string;
   description: string;
+  location?: string | null;
   category: TicketCategory;
   priority: TicketPriority;
   status: TicketStatus;

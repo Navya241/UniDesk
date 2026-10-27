@@ -27,6 +27,7 @@ export default function CreateTicketPage() {
 
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [location, setLocation] = React.useState("");
   const [category, setCategory] = React.useState<TicketCategory>("IT");
   const [priority, setPriority] = React.useState<TicketPriority>("MEDIUM");
   const [isAnonymous, setIsAnonymous] = React.useState(false);
@@ -43,16 +44,40 @@ export default function CreateTicketPage() {
     matchedKeywords: string[];
   } | null>(null);
 
-  // Trigger keyword suggestion as user types title or description
+  // FAQ Live Suggestions
+  const [faqsList, setFaqsList] = React.useState<Array<{ id: string; question: string; answer: string; category: string }>>([]);
+  const [suggestedFaqs, setSuggestedFaqs] = React.useState<Array<{ id: string; question: string; answer: string; category: string }>>([]);
+
   React.useEffect(() => {
-    const combinedText = `${title} ${description}`;
+    fetch("/api/faqs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.faqs) setFaqsList(data.faqs);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Trigger keyword suggestion and FAQ lookup as user types title or description
+  React.useEffect(() => {
+    const combinedText = `${title} ${description}`.trim();
     const suggestion = suggestCategoryFromText(combinedText);
     if (suggestion && suggestion.category !== category) {
       setCategorySuggestion(suggestion);
     } else {
       setCategorySuggestion(null);
     }
-  }, [title, description, category]);
+
+    if (combinedText.length >= 4 && faqsList.length > 0) {
+      const tokens = combinedText.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+      const matches = faqsList.filter((faq) => {
+        const faqText = `${faq.question} ${faq.answer}`.toLowerCase();
+        return tokens.some((token) => faqText.includes(token));
+      }).slice(0, 3);
+      setSuggestedFaqs(matches);
+    } else {
+      setSuggestedFaqs([]);
+    }
+  }, [title, description, category, faqsList]);
 
   const handleApplySuggestion = () => {
     if (categorySuggestion) {
@@ -127,6 +152,7 @@ export default function CreateTicketPage() {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
+          location: location.trim() || undefined,
           category,
           priority,
           isAnonymous,
@@ -184,6 +210,40 @@ export default function CreateTicketPage() {
         </div>
       )}
 
+      {/* Live FAQ Knowledge Suggestions */}
+      {suggestedFaqs.length > 0 && (
+        <div className="rounded-3xl border border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/30 p-5 shadow-xs space-y-3 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold text-blue-800 dark:text-blue-300">
+              <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>Related FAQs found! Can these resolve your issue immediately?</span>
+            </div>
+            <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+              {suggestedFaqs.length} instant answer(s)
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {suggestedFaqs.map((faq) => (
+              <details
+                key={faq.id}
+                className="group p-3 rounded-xl bg-card border border-blue-200/80 dark:border-blue-800/80 text-xs shadow-xs"
+              >
+                <summary className="font-semibold text-foreground flex items-center justify-between cursor-pointer list-none group-open:text-primary">
+                  <span>{faq.question}</span>
+                  <span className="text-[10px] text-muted-foreground group-open:rotate-180 transition-transform">
+                    ▼
+                  </span>
+                </summary>
+                <p className="mt-2 text-muted-foreground leading-relaxed pl-2 border-l-2 border-primary/50 whitespace-pre-wrap">
+                  {faq.answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Ticket Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
@@ -199,12 +259,26 @@ export default function CreateTicketPage() {
             />
           </div>
 
+          {/* Location / Building / Room */}
+          <div>
+            <Input
+              label="Location / Building / Room Number (Optional)"
+              id="location"
+              placeholder="e.g. Hostel 4 - Room 302, Academic Block B - Lab 3, Library 2nd Floor, etc."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Helps department technicians locate and attend to the physical issue quickly.
+            </p>
+          </div>
+
           {/* Description */}
           <div>
             <Textarea
               label="Detailed Problem Description *"
               id="description"
-              placeholder="Describe the issue in detail. Include locations, equipment IDs, error messages, or previous ticket references..."
+              placeholder="Describe the issue in detail. Include equipment IDs, error messages, or previous ticket references..."
               rows={5}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -292,7 +366,7 @@ export default function CreateTicketPage() {
                 Submit as Anonymous Grievance
               </label>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                When enabled, ordinary department staff will NOT see your name, email, or profile. Your identity is scrubbed from API outputs and internal URLs.
+                When enabled, assigned departmental staff will NOT see your name, email, or profile across ticket queues and responses. Note: Super administrators retain audit capabilities to uphold institutional safety.
               </p>
             </div>
           </div>

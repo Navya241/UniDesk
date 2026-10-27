@@ -58,12 +58,13 @@ describe("Auth and Ticket Lifecycle Integration", () => {
     expect(itStaff).not.toBeNull();
     expect(itDept).not.toBeNull();
 
-    // 1. Create Ticket
+    // 1. Create Ticket with location metadata
     const ticket = await prisma.ticket.create({
       data: {
         ticketNumber: `TICK-TEST-${Date.now()}`,
         title: "Integration Test Ticket: Network Interface Down",
         description: "Testing end to end lifecycle state transitions and audit trail logging.",
+        location: "Computer Lab 3, Rack 2",
         category: "IT",
         priority: "HIGH",
         status: "SUBMITTED",
@@ -75,6 +76,7 @@ describe("Auth and Ticket Lifecycle Integration", () => {
 
     expect(ticket.status).toBe("SUBMITTED");
     expect(ticket.assignedToId).toBeNull();
+    expect(ticket.location).toBe("Computer Lab 3, Rack 2");
 
     // 2. Staff Claims Ticket
     const assignedTicket = await prisma.ticket.update({

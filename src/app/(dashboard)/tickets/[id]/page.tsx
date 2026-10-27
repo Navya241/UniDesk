@@ -408,7 +408,7 @@ export default function TicketDetailPage() {
         )}
 
         {/* Meta Info Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-border/70 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 pt-6 border-t border-border/70 text-xs">
           <div>
             <span className="text-muted-foreground block text-[11px]">Reporter:</span>
             <span className="font-semibold text-foreground mt-0.5 block">
@@ -424,6 +424,13 @@ export default function TicketDetailPage() {
             <span className="text-muted-foreground block text-[11px]">Department:</span>
             <span className="font-semibold text-foreground mt-0.5 block">
               {ticket.department.name}
+            </span>
+          </div>
+
+          <div>
+            <span className="text-muted-foreground block text-[11px]">Location / Room:</span>
+            <span className="font-semibold text-foreground mt-0.5 block">
+              {ticket.location || <span className="text-muted-foreground italic">Not specified</span>}
             </span>
           </div>
 

@@ -73,6 +73,7 @@ export async function GET(
       ticketNumber: ticket.ticketNumber,
       title: ticket.title,
       description: ticket.description,
+      location: ticket.location,
       category: ticket.category,
       priority: ticket.priority,
       status: ticket.status,

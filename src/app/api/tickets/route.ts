@@ -11,6 +11,7 @@ import { z } from "zod";
 const CreateTicketSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long.").max(200),
   description: z.string().min(10, "Description must be at least 10 characters long."),
+  location: z.string().max(100).optional().nullable(),
   category: z.enum(["HOSTEL", "ACADEMICS", "IT", "LIBRARY", "ADMINISTRATION", "OTHER"]),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
   isAnonymous: z.boolean().default(false),
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest) {
         { title: { contains: search } },
         { ticketNumber: { contains: search } },
         { description: { contains: search } },
+        { location: { contains: search } },
       ];
     }
 
@@ -88,6 +90,7 @@ export async function GET(req: NextRequest) {
         ticketNumber: t.ticketNumber,
         title: t.title,
         description: t.description,
+        location: t.location,
         category: t.category,
         priority: t.priority,
         status: t.status,
@@ -152,7 +155,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { title, description, category, priority, isAnonymous, attachments } = result.data;
+    const { title, description, location, category, priority, isAnonymous, attachments } = result.data;
 
     // 1. Resolve target department automatically based on category
     const departmentId = await resolveDepartmentForCategory(category as TicketCategory);
@@ -176,6 +179,7 @@ export async function POST(req: NextRequest) {
           ticketNumber,
           title,
           description,
+          location: location?.trim() || null,
           category,
           priority,
           status: "SUBMITTED",
